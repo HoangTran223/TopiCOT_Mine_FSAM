@@ -207,9 +207,9 @@ class BasicTrainer:
 
                     if not batch_loss.requires_grad:
                         batch_loss.requires_grad = True
-                        
+
                     scaler.scale(batch_loss.mean()).backward()
-                    optimizer.first_step(zero_grad=True, device=device)
+                    found_inf = optimizer.first_step(zero_grad=True, device=device)
 
                     with torch.no_grad():  # Tắt gradient cho forward pass thứ hai
                         rst_dict_adv = self.model(batch_data, epoch_id=epoch, batch_idx=batch_idx)
@@ -220,8 +220,11 @@ class BasicTrainer:
                     
                     optimizer.second_step(zero_grad=True)
 
-                scaler.step(optimizer.base_optimizer)
-                scaler.update()
+                if found_inf:
+                    print("Gradient contains inf or NaN, skipping optimizer step.")
+                else:
+                    scaler.step(optimizer.base_optimizer)
+                    scaler.update()
 
 
                 for key in rst_dict:
