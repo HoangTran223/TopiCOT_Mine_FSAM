@@ -96,7 +96,7 @@ class FSAM(torch.optim.Optimizer):
                     state["momentum"].mul_(self.lmbda).add_(grad, alpha=1 - self.lmbda)  # In-place update cho momentum
 
                 # Tính grad_norm đồng thời trong cùng vòng lặp
-                grad_norm.add_(((torch.abs(p) if adaptive else 1.0) * p.grad).norm(2).pow(2))
+                grad_norm.add_(((torch.abs(p.to(device)) if adaptive else 1.0) * p.grad.to(device)).norm(2).pow(2))
 
         grad_norm = grad_norm.sqrt()  # sqrt chỉ gọi một lần
 
