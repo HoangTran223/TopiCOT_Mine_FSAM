@@ -15,11 +15,12 @@ import os
 import scipy
 import torch.optim
 from topmost.trainers.SAM_function.SAM import SAM
+from topmost.trainers.SAM_function.FSAM import FSAM
 
 
 
 class BasicTrainer:
-    def __init__(self, model, epochs=200, learning_rate=0.002, batch_size=200, lr_scheduler=None, lr_step_size=125, log_interval=5, rho=0.05):
+    def __init__(self, model, epochs=200, learning_rate=0.002, batch_size=200, lr_scheduler=None, lr_step_size=125, log_interval=5, rho=0.05, sigma=1, lmbda=0.6):
         self.model = model
         self.epochs = epochs
         self.learning_rate = learning_rate
@@ -28,6 +29,8 @@ class BasicTrainer:
         self.lr_step_size = lr_step_size
         self.log_interval = log_interval
         self.rho = rho 
+        self.sigma = sigma
+        self.lmbda = lmbda
         self.logger = logging.getLogger('main')
 
     def make_optimizer(self,):
@@ -37,12 +40,24 @@ class BasicTrainer:
         #     'rho': self.rho,
         # }
         # optimizer = torch.optim.Adam(**args_dict)
+
+        # Chọn với SAM
+        # base_optimizer = torch.optim.SGD
+        # optimizer = SAM(
+        #     self.model.parameters(),
+        #     base_optimizer,
+        #     lr=self.learning_rate,
+        #     rho=self.rho)
+
+        # Chọn với FSAM
         base_optimizer = torch.optim.SGD
-        optimizer = SAM(
+        optimizer = FSAM(
             self.model.parameters(),
             base_optimizer,
             lr=self.learning_rate,
-            rho=self.rho)
+            rho=self.rho,
+            sigma=self.sigma,
+            lmbda=self.lmbda)
 
         return optimizer
 
