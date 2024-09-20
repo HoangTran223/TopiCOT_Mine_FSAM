@@ -190,7 +190,6 @@ class BasicTrainer:
             lr_scheduler = self.make_lr_scheduler(optimizer)
 
         data_size = len(dataset_handler.train_dataloader.dataset)
-        scaler = GradScaler()
         loss_rst_dict = defaultdict(float)
 
         for epoch in tqdm(range(1, self.epochs + 1)):
@@ -215,7 +214,7 @@ class BasicTrainer:
                 
                 batch_loss_adv = rst_dict_adv['loss']
                 if batch_loss_adv.requires_grad:
-                    scaler.scale(batch_loss_adv.mean()).backward()
+                    batch_loss_adv.mean().backward()
                 
                 optimizer.second_step(zero_grad=True)
 
