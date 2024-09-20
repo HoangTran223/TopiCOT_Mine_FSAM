@@ -80,7 +80,6 @@ class FSAM(torch.optim.Optimizer):
     def first_step(self, zero_grad=False, device='cuda'):
         # Khởi tạo grad_norm trên cùng device để tránh conflict CPU/GPU
         grad_norm = torch.tensor(0.0, device=device)
-        found_inf = False           # Thêm
 
         # Tính momentum và grad_norm trong cùng một vòng lặp
         for group in self.param_groups:
@@ -100,9 +99,6 @@ class FSAM(torch.optim.Optimizer):
                     p.grad.add_(state["momentum"], alpha=-self.sigma)  # Dùng in-place operation
                     state["momentum"].mul_(self.lmbda).add_(grad, alpha=1 - self.lmbda)  # In-place update cho momentum
 
-                # Kiểm tra gradient cho vô cực
-                if torch.isnan(grad).any() or torch.isinf(grad).any():
-                    found_inf = True
 
                 # Tính grad_norm đồng thời trong cùng vòng lặp
                 grad_norm.add_(((torch.abs(p.to(device)) if adaptive else 1.0) * p.grad.to(device)).norm(2).pow(2))
@@ -127,8 +123,6 @@ class FSAM(torch.optim.Optimizer):
         # Clear gradient nếu cần
         if zero_grad:
             self.zero_grad()
-        
-        return found_inf
 
 
     @torch.no_grad()
@@ -153,8 +147,7 @@ class FSAM(torch.optim.Optimizer):
     def step(self, closure=None):
         # Closure do a full forward-backward pass
         closure = torch.enable_grad()(closure)  
-        found_inf = self.first_step(zero_grad=True)        
-        self.first_step(zero_grad=True)
+        self.first_step(zero_grad=True)        
         closure()
         self.second_step()
 

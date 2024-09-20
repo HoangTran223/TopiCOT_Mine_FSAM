@@ -18,7 +18,7 @@ from topmost.trainers.SAM_function.SAM import SAM
 from topmost.trainers.SAM_function.FSAM import FSAM
 
 # Thêm
-from torch.cuda.amp import autocast, GradScaler
+# from torch.cuda.amp import autocast, GradScaler
 
 
 class BasicTrainer:
@@ -201,30 +201,23 @@ class BasicTrainer:
                 optimizer.zero_grad()
                 batch_data = {key: value.to(device) for key, value in batch_data.items()}
 
-                with autocast():
-                    rst_dict = self.model(batch_data, epoch_id=epoch, batch_idx=batch_idx)
-                    batch_loss = rst_dict['loss']
+                rst_dict = self.model(batch_data, epoch_id=epoch, batch_idx=batch_idx)
+                batch_loss = rst_dict['loss']
 
-                    if not batch_loss.requires_grad:
-                        batch_loss.requires_grad = True
+                if not batch_loss.requires_grad:
+                    batch_loss.requires_grad = True
 
-                    scaler.scale(batch_loss.mean()).backward()
-                    found_inf = optimizer.first_step(zero_grad=True, device=device)
+                batch_loss.mean().backward()
+                optimizer.first_step(zero_grad=True, device=device)
 
-                    with torch.no_grad():  # Tắt gradient cho forward pass thứ hai
-                        rst_dict_adv = self.model(batch_data, epoch_id=epoch, batch_idx=batch_idx)
-                    
-                    batch_loss_adv = rst_dict_adv['loss']
-                    if batch_loss_adv.requires_grad:
-                        scaler.scale(batch_loss_adv.mean()).backward()
-                    
-                    optimizer.second_step(zero_grad=True)
-
-                if found_inf:
-                    print("Gradient contains inf or NaN, skipping optimizer step.")
-                else:
-                    scaler.step(optimizer.base_optimizer)
-                    scaler.update()
+                with torch.no_grad():  # Tắt gradient cho forward pass thứ hai
+                    rst_dict_adv = self.model(batch_data, epoch_id=epoch, batch_idx=batch_idx)
+                
+                batch_loss_adv = rst_dict_adv['loss']
+                if batch_loss_adv.requires_grad:
+                    scaler.scale(batch_loss_adv.mean()).backward()
+                
+                optimizer.second_step(zero_grad=True)
 
 
                 for key in rst_dict:
