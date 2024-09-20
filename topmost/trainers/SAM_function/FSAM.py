@@ -8,7 +8,7 @@ class FSAM(torch.optim.Optimizer):
 
         # Thêm
         self.device = device
-        
+
         self.sigma = sigma
         self.lmbda = lmbda
 
@@ -77,9 +77,9 @@ class FSAM(torch.optim.Optimizer):
 
 
     @torch.no_grad()
-    def first_step(self, zero_grad=False, device=None):
+    def first_step(self, zero_grad=False, device='cuda'):
         # Khởi tạo grad_norm trên cùng device để tránh conflict CPU/GPU
-        grad_norm = torch.tensor(0.0)
+        grad_norm = torch.tensor(0.0, device=device)
 
         # Tính momentum và grad_norm trong cùng một vòng lặp
         for group in self.param_groups:
