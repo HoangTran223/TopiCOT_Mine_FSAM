@@ -17,6 +17,8 @@ import torch.optim
 from topmost.trainers.SAM_function.SAM import SAM
 from topmost.trainers.SAM_function.FSAM import FSAM
 
+# Thêm
+from torch.cuda.amp import autocast, GradScaler
 
 
 class BasicTrainer:
@@ -77,36 +79,36 @@ class BasicTrainer:
         return top_words, train_theta
 
     # Sửa lại hàm train để sử dụng SAM
-    def train(self, dataset_handler, verbose=False):
-        optimizer = self.make_optimizer()
-        # base_optimizer = torch.optim.SGD
-        # optimizer = SAM(self.model.parameters(), base_optimizer, rho=0.05, adaptive=False)
+    # def train(self, dataset_handler, verbose=False):
+    #     optimizer = self.make_optimizer()
+    #     # base_optimizer = torch.optim.SGD
+    #     # optimizer = SAM(self.model.parameters(), base_optimizer, rho=0.05, adaptive=False)
 
-        if self.lr_scheduler:
-            print("===>using lr_scheduler")
-            self.logger.info("===>using lr_scheduler")
-            lr_scheduler = self.make_lr_scheduler(optimizer)
+    #     if self.lr_scheduler:
+    #         print("===>using lr_scheduler")
+    #         self.logger.info("===>using lr_scheduler")
+    #         lr_scheduler = self.make_lr_scheduler(optimizer)
 
-        data_size = len(dataset_handler.train_dataloader.dataset)
+    #     data_size = len(dataset_handler.train_dataloader.dataset)
 
-        for epoch in tqdm(range(1, self.epochs + 1)):
-            self.model.train()
-            loss_rst_dict = defaultdict(float)
-            wandb.log({'epoch': epoch})
+    #     for epoch in tqdm(range(1, self.epochs + 1)):
+    #         self.model.train()
+    #         loss_rst_dict = defaultdict(float)
+    #         wandb.log({'epoch': epoch})
 
-            for batch_idx, batch_data in enumerate(dataset_handler.train_dataloader):
+    #         for batch_idx, batch_data in enumerate(dataset_handler.train_dataloader):
 
-                rst_dict = self.model(batch_data, epoch_id=epoch, batch_idx=batch_idx)
-                batch_loss = rst_dict['loss']
-                batch_loss.mean().backward()
+    #             rst_dict = self.model(batch_data, epoch_id=epoch, batch_idx=batch_idx)
+    #             batch_loss = rst_dict['loss']
+    #             batch_loss.mean().backward()
                 
-                optimizer.first_step(zero_grad=True)
+    #             optimizer.first_step(zero_grad=True)
 
-                rst_dict_adv = self.model(batch_data, epoch_id=epoch, batch_idx=batch_idx)
-                batch_loss_adv = rst_dict_adv['loss']
-                batch_loss_adv.mean().backward()
+    #             rst_dict_adv = self.model(batch_data, epoch_id=epoch, batch_idx=batch_idx)
+    #             batch_loss_adv = rst_dict_adv['loss']
+    #             batch_loss_adv.mean().backward()
             
-                optimizer.second_step(zero_grad=True)
+    #             optimizer.second_step(zero_grad=True)
 
                 # if MOO is not None:
                 #     loss_recon = rst_dict['loss_recon']
@@ -173,6 +175,45 @@ class BasicTrainer:
                     # optimizer.zero_grad()
                     # batch_loss.backward()
                     # torch.nn.utils.clip_grad_norm_(self.model.parameters(), True)
+
+
+    def train(self, dataset_handler, verbose=False):
+        optimizer = self.make_optimizer()
+        # base_optimizer = torch.optim.SGD
+        # optimizer = SAM(self.model.parameters(), base_optimizer, rho=0.05, adaptive=False)
+
+        if self.lr_scheduler:
+            print("===>using lr_scheduler")
+            self.logger.info("===>using lr_scheduler")
+            lr_scheduler = self.make_lr_scheduler(optimizer)
+
+        data_size = len(dataset_handler.train_dataloader.dataset)
+        scaler = GradScaler()
+        loss_rst_dict = defaultdict(float)
+
+        for epoch in tqdm(range(1, self.epochs + 1)):
+            self.model.train()
+            wandb.log({'epoch': epoch})
+
+            for batch_idx, batch_data in enumerate(dataset_handler.train_dataloader):
+                optimizer.zero_grad()
+                with autocast():
+                    rst_dict = self.model(batch_data, epoch_id=epoch, batch_idx=batch_idx)
+                    batch_loss = rst_dict['loss']
+                    scaler.scale(batch_loss.mean()).backward()
+
+                    optimizer.first_step(zero_grad=True)
+
+                    with torch.no_grad():  # Tắt gradient cho forward pass thứ hai
+                        rst_dict_adv = self.model(batch_data, epoch_id=epoch, batch_idx=batch_idx)
+                        batch_loss_adv = rst_dict_adv['loss']
+                        scaler.scale(batch_loss_adv.mean()).backward()
+                    
+                    optimizer.second_step(zero_grad=True)
+
+                scaler.step(optimizer.base_optimizer)
+                scaler.update()
+
 
                 for key in rst_dict:
                     try:
