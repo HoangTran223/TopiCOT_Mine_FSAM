@@ -204,13 +204,18 @@ class BasicTrainer:
                 with autocast():
                     rst_dict = self.model(batch_data, epoch_id=epoch, batch_idx=batch_idx)
                     batch_loss = rst_dict['loss']
-                    scaler.scale(batch_loss.mean()).backward()
 
+                    if not batch_loss.requires_grad:
+                        batch_loss.requires_grad = True
+                        
+                    scaler.scale(batch_loss.mean()).backward()
                     optimizer.first_step(zero_grad=True, device=device)
 
                     with torch.no_grad():  # Tắt gradient cho forward pass thứ hai
                         rst_dict_adv = self.model(batch_data, epoch_id=epoch, batch_idx=batch_idx)
-                        batch_loss_adv = rst_dict_adv['loss']
+                    
+                    batch_loss_adv = rst_dict_adv['loss']
+                    if batch_loss_adv.requires_grad:
                         scaler.scale(batch_loss_adv.mean()).backward()
                     
                     optimizer.second_step(zero_grad=True)
