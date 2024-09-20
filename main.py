@@ -224,10 +224,6 @@ if __name__ == "__main__":
                                                 lr_scheduler=args.lr_scheduler,
                                                 lr_step_size=args.lr_step_size,
                                                 rho=args.rho)
-<<<<<<< HEAD
-=======
-
->>>>>>> c39ac2eafd40425dee12aa7e31a5707fc25bc04e
 
     # train the model
     # trainer.train(dataset, MOO=args.MOO_algo)
