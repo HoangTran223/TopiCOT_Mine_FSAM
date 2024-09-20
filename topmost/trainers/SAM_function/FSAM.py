@@ -2,9 +2,13 @@
 
 
 class FSAM(torch.optim.Optimizer):
-    def __init__(self, params, base_optimizer, rho=0.05, adaptive=False, lr=0.002, sigma=1, lmbda=0.9):
+    def __init__(self, params, base_optimizer, device, rho=0.05, adaptive=False, lr=0.002, sigma=1, lmbda=0.9):
         defaults = dict(rho=rho, adaptive=adaptive, lr=lr)
         super(FSAM, self).__init__(params, defaults)
+
+        # Thêm
+        self.device = device
+        
         self.sigma = sigma
         self.lmbda = lmbda
 
@@ -73,7 +77,7 @@ class FSAM(torch.optim.Optimizer):
 
 
     @torch.no_grad()
-    def first_step(self, zero_grad=False):
+    def first_step(self, zero_grad=False, device=None):
         # Khởi tạo grad_norm trên cùng device để tránh conflict CPU/GPU
         grad_norm = torch.tensor(0.0)
 

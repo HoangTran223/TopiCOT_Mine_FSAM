@@ -22,7 +22,7 @@ from torch.cuda.amp import autocast, GradScaler
 
 
 class BasicTrainer:
-    def __init__(self, model, epochs=200, learning_rate=0.002, batch_size=200, lr_scheduler=None, lr_step_size=125, log_interval=5, rho=0.05, sigma=1, lmbda=0.6):
+    def __init__(self, model, epochs=200, learning_rate=0.002, batch_size=200, lr_scheduler=None, lr_step_size=125, log_interval=5, rho=0.05, sigma=1, lmbda=0.6, device = 'cuda'):
         self.model = model
         self.epochs = epochs
         self.learning_rate = learning_rate
@@ -33,6 +33,7 @@ class BasicTrainer:
         self.rho = rho 
         self.sigma = sigma
         self.lmbda = lmbda
+        self.device = device
         self.logger = logging.getLogger('main')
 
     def make_optimizer(self,):
@@ -56,6 +57,7 @@ class BasicTrainer:
         optimizer = FSAM(
             self.model.parameters(),
             base_optimizer,
+            device=self.device,
             lr=self.learning_rate,
             rho=self.rho,
             sigma=self.sigma,
@@ -204,7 +206,7 @@ class BasicTrainer:
                     batch_loss = rst_dict['loss']
                     scaler.scale(batch_loss.mean()).backward()
 
-                    optimizer.first_step(zero_grad=True)
+                    optimizer.first_step(zero_grad=True, device=device)
 
                     with torch.no_grad():  # Tắt gradient cho forward pass thứ hai
                         rst_dict_adv = self.model(batch_data, epoch_id=epoch, batch_idx=batch_idx)
