@@ -1,10 +1,10 @@
 ﻿import torch 
 
 
-class FriendlySAM(torch.optim.Optimizer):
+class FSAM(torch.optim.Optimizer):
     def __init__(self, params, base_optimizer, rho=0.05, adaptive=False, lr=0.002, sigma=1, lmbda=0.9):
         defaults = dict(rho=rho, adaptive=adaptive, lr=lr)
-        super(FriendlySAM, self).__init__(params, defaults)
+        super(FSAM, self).__init__(params, defaults)
         self.sigma = sigma
         self.lmbda = lmbda
 
