@@ -199,34 +199,22 @@ class BasicTrainer:
             for batch_idx, batch_data in enumerate(dataset_handler.train_dataloader):
                 
                 # Kich ban 1
-                # batch_data = {key: value.to(device) for key, value in batch_data.items()}
-                # rst_dict = self.model(batch_data, epoch_id=epoch, batch_idx=batch_idx)
-                # batch_loss = rst_dict['loss']
-                # optimizer.zero_grad()
-
-                # # batch_loss.mean().backward()
-                # batch_loss.backward()
-                # optimizer.first_step(zero_grad=True, device=device)
-
-                # rst_dict_adv = self.model(batch_data, epoch_id=epoch, batch_idx=batch_idx)
-                # # batch_loss_adv = rst_dict_adv['loss']
-                # # batch_loss_adv.mean().backward()
-
-                # rst_dict_adv['loss'].backward()
-                
-                # optimizer.second_step(zero_grad=True)
-
-
                 batch_data = {key: value.to(device) for key, value in batch_data.items()}
                 rst_dict = self.model(batch_data, epoch_id=epoch, batch_idx=batch_idx)
-
-                def closure():
-                    loss = rst_dict['loss']
-                    loss.backward(retain_graph=True)
-                    return loss 
-
-                optimizer.step(closure())
+                batch_loss = rst_dict['loss']
                 optimizer.zero_grad()
+
+                # batch_loss.mean().backward()
+                batch_loss.backward()
+                optimizer.first_step(zero_grad=True, device=device)
+
+                rst_dict_adv = self.model(batch_data, epoch_id=epoch, batch_idx=batch_idx)
+                # batch_loss_adv = rst_dict_adv['loss']
+                # batch_loss_adv.mean().backward()
+
+                rst_dict_adv['loss'].backward()
+
+                optimizer.second_step(zero_grad=True)
 
                 for key in rst_dict:
                     try:
