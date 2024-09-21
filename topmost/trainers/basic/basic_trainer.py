@@ -198,7 +198,6 @@ class BasicTrainer:
 
             for batch_idx, batch_data in enumerate(dataset_handler.train_dataloader):
                 
-                # Kich ban 1
                 batch_data = {key: value.to(device) for key, value in batch_data.items()}
                 rst_dict = self.model(batch_data, epoch_id=epoch, batch_idx=batch_idx)
                 batch_loss = rst_dict['loss']
