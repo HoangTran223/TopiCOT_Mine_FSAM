@@ -50,7 +50,7 @@ class DatasetHandler(Dataset):
 
 
 class RawDatasetHandler:
-    def __init__(self, docs, preprocessing, batch_size=200, device='cpu', as_tensor=False, contextual_embed=False):
+    def __init__(self, docs, preprocessing, batch_size=200, device='cuda', as_tensor=False, contextual_embed=False):
 
         rst = preprocessing.preprocess(docs)
         self.train_data = rst['train_bow']
@@ -76,7 +76,7 @@ class RawDatasetHandler:
 
 
 class BasicDatasetHandler:
-    def __init__(self, dataset_dir, batch_size=200, read_labels=False, device='cpu', as_tensor=False, contextual_embed=False):
+    def __init__(self, dataset_dir, batch_size=200, read_labels=False, device='cuda', as_tensor=False, contextual_embed=False):
         # train_bow: NxV
         # test_bow: Nxv
         # word_emeddings: VxD
