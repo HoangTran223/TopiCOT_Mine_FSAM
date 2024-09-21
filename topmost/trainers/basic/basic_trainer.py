@@ -201,7 +201,7 @@ class BasicTrainer:
                 
                 batch_data = {key: value.to(device) for key, value in batch_data.items()}
 
-                enable_running_stats(model)
+                enable_running_stats(self.model)
                 rst_dict = self.model(batch_data, epoch_id=epoch, batch_idx=batch_idx)
                 batch_loss = rst_dict['loss']
                 optimizer.zero_grad()
@@ -210,7 +210,7 @@ class BasicTrainer:
                 batch_loss.backward()
                 optimizer.first_step(zero_grad=True)
 
-                disable_running_stats(model)
+                disable_running_stats(self.model)
                 rst_dict_adv = self.model(batch_data, epoch_id=epoch, batch_idx=batch_idx)
                 # batch_loss_adv = rst_dict_adv['loss']
                 # batch_loss_adv.mean().backward()
