@@ -206,7 +206,7 @@ class BasicTrainer:
 
                 # batch_loss.mean().backward()
                 batch_loss.backward()
-                optimizer.first_step(zero_grad=True, device=device)
+                optimizer.first_step(zero_grad=True)
 
                 rst_dict_adv = self.model(batch_data, epoch_id=epoch, batch_idx=batch_idx)
                 # batch_loss_adv = rst_dict_adv['loss']
