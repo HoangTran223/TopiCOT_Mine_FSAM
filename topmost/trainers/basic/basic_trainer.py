@@ -222,11 +222,9 @@ class BasicTrainer:
 
                 def closure():
                     loss = rst_dict['loss']
-                    loss.backward()
+                    loss.backward(retain_graph=True)
                     return loss 
 
-                loss = rst_dict['loss']
-                loss.backward()
                 optimizer.step(closure())
                 optimizer.zero_grad()
 
