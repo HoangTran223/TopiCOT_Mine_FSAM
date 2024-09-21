@@ -42,8 +42,7 @@ class DatasetHandler(Dataset):
             'data': self.data[idx],
             'contextual_embed': self.contextual_embed[idx]
         }
-    
-    # Thêm hàm để set device
+
     def to(self, device):
         self.data = self.data.to(device)  
         if self.contextual_embed is not None:
