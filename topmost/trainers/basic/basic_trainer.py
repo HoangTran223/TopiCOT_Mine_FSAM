@@ -216,24 +216,21 @@ class BasicTrainer:
                 
                 # optimizer.second_step(zero_grad=True)
 
-                batch_data = {key: value.to(device) for key, value in batch_data.items()}
-                rst_dict = self.model(batch_data, epoch_id=epoch, batch_idx=batch_idx)
+
 
                 def closure():
+                    batch_data = {key: value.to(device) for key, value in batch_data.items()}
+                    rst_dict = self.model(batch_data, epoch_id=epoch, batch_idx=batch_idx)
                     loss = rst_dict['loss']
                     loss.backward()
                     return loss 
 
+                batch_data = {key: value.to(device) for key, value in batch_data.items()}
+                rst_dict = self.model(batch_data, epoch_id=epoch, batch_idx=batch_idx)
                 loss = rst_dict['loss']
                 loss.backward()
                 optimizer.step(closure)
                 optimizer.zero_grad()
-
-
-
-                    
-
-
 
                 for key in rst_dict:
                     try:

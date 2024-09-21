@@ -18,13 +18,13 @@ class FSAM(torch.optim.Optimizer):
 
 
     # Đoạn code ban đầu 
-    # def _grad_norm(self):
-    #     norm = torch.norm(
-    #                 torch.stack([
-    #                     ((torch.abs(p) if group["adaptive"] else 1.0) * p.grad).norm(p=2)
-    #                     for group in self.param_groups for p in group["params"] if p.grad is not None ]),
-    #                 p=2)
-    #     return norm
+    def _grad_norm(self):
+        norm = torch.norm(
+                    torch.stack([
+                        ((torch.abs(p) if group["adaptive"] else 1.0) * p.grad).norm(p=2).to(self.device)
+                        for group in self.param_groups for p in group["params"] if p.grad is not None ]),
+                    p=2)
+        return norm
 
 
     # @torch.no_grad()
@@ -76,50 +76,66 @@ class FSAM(torch.optim.Optimizer):
     #     if zero_grad: self.zero_grad()
 
 
+    # Kịch bản 2
+    # @torch.no_grad()
+    # def first_step(self, zero_grad=False, device='cuda'):
+    #     grad_norm = torch.tensor(0.0, device=device)
+
+    #     Tính momentum và grad_norm trong cùng một vòng lặp
+    #     for group in self.param_groups:
+    #         for p in group["params"]:
+    #             if p.grad is None: 
+    #                 continue
+
+    #             grad = p.grad.clone()
+    #             state = self.state[p]
+
+    #             Tính momentum
+    #             if "momentum" not in state:
+    #                 state["momentum"] = grad 
+    #             else:
+    #                 p.grad.add_(state["momentum"], alpha=-self.sigma)
+    #                 state["momentum"].mul_(self.lmbda).add_(grad, alpha=1 - self.lmbda)  # In-place update cho momentum
+
+
+    #             grad_norm.add_(((torch.abs(p.to(device)) if group["adaptive"] else 1.0) * p.grad.to(device)).norm(2).pow(2))
+
+    #     grad_norm = grad_norm.sqrt() 
+
+    #     Tính toán scale và thực hiện update weights
+    #     scale = group["rho"] / (grad_norm + 1e-12)  # Tránh chia 0
+    #     for group in self.param_groups:
+    #         for p in group["params"]:
+    #             if p.grad is None: 
+    #                 continue
+
+    #             Lưu trữ trạng thái cũ
+    #             state = self.state[p]
+    #             state["old_p"] = p.data.clone() 
+
+    #             Tính e(w) và thực hiện update weights
+    #             e_w = (torch.pow(p, 2) if  group["adaptive"] else 1.0) * p.grad * scale
+    #             p.add_(e_w) 
+
+    #     Clear gradient nếu cần
+    #     if zero_grad:
+    #         self.zero_grad()
+
+
     @torch.no_grad()
-    def first_step(self, zero_grad=False, device='cuda'):
-        grad_norm = torch.tensor(0.0, device=device)
-
-        # Tính momentum và grad_norm trong cùng một vòng lặp
+    def first_step(self, zero_grad=False):
+        grad_norm = self._grad_norm()
         for group in self.param_groups:
+            scale = group["rho"] / (grad_norm + 1e-12)
+
             for p in group["params"]:
-                if p.grad is None: 
-                    continue
+                if p.grad is None: continue
+                self.state[p]["old_p"] = p.data.clone()
+                e_w = (torch.pow(p, 2) if group["adaptive"] else 1.0) * p.grad * scale.to(p)
+                p.add_(e_w)  # climb to the local maximum "w + e(w)"
 
-                grad = p.grad.clone()
-                state = self.state[p]
-
-                # Tính momentum
-                if "momentum" not in state:
-                    state["momentum"] = grad 
-                else:
-                    p.grad.add_(state["momentum"], alpha=-self.sigma)
-                    state["momentum"].mul_(self.lmbda).add_(grad, alpha=1 - self.lmbda)  # In-place update cho momentum
-
-
-                grad_norm.add_(((torch.abs(p.to(device)) if group["adaptive"] else 1.0) * p.grad.to(device)).norm(2).pow(2))
-
-        grad_norm = grad_norm.sqrt() 
-
-        # Tính toán scale và thực hiện update weights
-        scale = group["rho"] / (grad_norm + 1e-12)  # Tránh chia 0
-        for group in self.param_groups:
-            for p in group["params"]:
-                if p.grad is None: 
-                    continue
-
-                # Lưu trữ trạng thái cũ
-                state = self.state[p]
-                state["old_p"] = p.data.clone() 
-
-                # Tính e(w) và thực hiện update weights
-                e_w = (torch.pow(p, 2) if  group["adaptive"] else 1.0) * p.grad * scale
-                p.add_(e_w) 
-
-        # Clear gradient nếu cần
-        if zero_grad:
-            self.zero_grad()
-
+        if zero_grad: self.zero_grad()
+    
 
     @torch.no_grad()
     def second_step(self, zero_grad=False):
