@@ -190,31 +190,24 @@ class BasicTrainer:
             lr_scheduler = self.make_lr_scheduler(optimizer)
 
         data_size = len(dataset_handler.train_dataloader.dataset)
-        loss_rst_dict = defaultdict(float)
 
         for epoch in tqdm(range(1, self.epochs + 1)):
             self.model.train()
+            loss_rst_dict = defaultdict(float)
             wandb.log({'epoch': epoch})
 
             for batch_idx, batch_data in enumerate(dataset_handler.train_dataloader):
-                optimizer.zero_grad()
-                batch_data = {key: value.to(device) for key, value in batch_data.items()}
 
+                batch_data = {key: value.to(device) for key, value in batch_data.items()}
                 rst_dict = self.model(batch_data, epoch_id=epoch, batch_idx=batch_idx)
                 batch_loss = rst_dict['loss']
-
-                if not batch_loss.requires_grad:
-                    batch_loss.requires_grad = True
 
                 batch_loss.mean().backward()
                 optimizer.first_step(zero_grad=True, device=device)
 
-                with torch.no_grad():  # Tắt gradient cho forward pass thứ hai
-                    rst_dict_adv = self.model(batch_data, epoch_id=epoch, batch_idx=batch_idx)
-                
+                rst_dict_adv = self.model(batch_data, epoch_id=epoch, batch_idx=batch_idx)
                 batch_loss_adv = rst_dict_adv['loss']
-                if batch_loss_adv.requires_grad:
-                    batch_loss_adv.mean().backward()
+                batch_loss_adv.mean().backward()
                 
                 optimizer.second_step(zero_grad=True)
 

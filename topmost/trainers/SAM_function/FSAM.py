@@ -83,30 +83,28 @@ class FSAM(torch.optim.Optimizer):
 
         # Tính momentum và grad_norm trong cùng một vòng lặp
         for group in self.param_groups:
-            rho = group["rho"]
-            adaptive = group["adaptive"]
             for p in group["params"]:
                 if p.grad is None: 
                     continue
 
-                grad = p.grad  # Không dùng clone() để tiết kiệm bộ nhớ và thời gian
+                grad = p.grad.clone() # Không dùng clone() để tiết kiệm bộ nhớ và thời gian
                 state = self.state[p]
 
                 # Tính momentum
                 if "momentum" not in state:
-                    state["momentum"] = grad.clone()  # Khởi tạo momentum ban đầu bằng cách clone
+                    state["momentum"] = grad  # Khởi tạo momentum ban đầu bằng cách clone
                 else:
                     p.grad.add_(state["momentum"], alpha=-self.sigma)  # Dùng in-place operation
                     state["momentum"].mul_(self.lmbda).add_(grad, alpha=1 - self.lmbda)  # In-place update cho momentum
 
 
                 # Tính grad_norm đồng thời trong cùng vòng lặp
-                grad_norm.add_(((torch.abs(p.to(device)) if adaptive else 1.0) * p.grad.to(device)).norm(2).pow(2))
+                grad_norm.add_(((torch.abs(p.to(device)) if group["adaptive"] else 1.0) * p.grad.to(device)).norm(2).pow(2))
 
         grad_norm = grad_norm.sqrt()  # sqrt chỉ gọi một lần
 
         # Tính toán scale và thực hiện update weights
-        scale = rho / (grad_norm + 1e-12)  # Tránh chia 0
+        scale = group["rho"] / (grad_norm + 1e-12)  # Tránh chia 0
         for group in self.param_groups:
             for p in group["params"]:
                 if p.grad is None: 
@@ -117,7 +115,7 @@ class FSAM(torch.optim.Optimizer):
                 state["old_p"] = p.data.clone()  # Lưu lại trạng thái cũ trước khi thay đổi
 
                 # Tính e(w) và thực hiện update weights
-                e_w = (torch.pow(p, 2) if adaptive else 1.0) * p.grad * scale
+                e_w = (torch.pow(p, 2) if  group["adaptive"] else 1.0) * p.grad * scale
                 p.add_(e_w)  # In-place addition để tối ưu bộ nhớ
 
         # Clear gradient nếu cần
