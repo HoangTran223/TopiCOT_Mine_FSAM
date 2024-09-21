@@ -78,7 +78,6 @@ class FSAM(torch.optim.Optimizer):
 
     @torch.no_grad()
     def first_step(self, zero_grad=False, device='cuda'):
-        # Khởi tạo grad_norm trên cùng device để tránh conflict CPU/GPU
         grad_norm = torch.tensor(0.0, device=device)
 
         # Tính momentum và grad_norm trong cùng một vòng lặp
@@ -87,21 +86,20 @@ class FSAM(torch.optim.Optimizer):
                 if p.grad is None: 
                     continue
 
-                grad = p.grad.clone() # Không dùng clone() để tiết kiệm bộ nhớ và thời gian
+                grad = p.grad.clone()
                 state = self.state[p]
 
                 # Tính momentum
                 if "momentum" not in state:
-                    state["momentum"] = grad  # Khởi tạo momentum ban đầu bằng cách clone
+                    state["momentum"] = grad 
                 else:
-                    p.grad.add_(state["momentum"], alpha=-self.sigma)  # Dùng in-place operation
+                    p.grad.add_(state["momentum"], alpha=-self.sigma)
                     state["momentum"].mul_(self.lmbda).add_(grad, alpha=1 - self.lmbda)  # In-place update cho momentum
 
 
-                # Tính grad_norm đồng thời trong cùng vòng lặp
                 grad_norm.add_(((torch.abs(p.to(device)) if group["adaptive"] else 1.0) * p.grad.to(device)).norm(2).pow(2))
 
-        grad_norm = grad_norm.sqrt()  # sqrt chỉ gọi một lần
+        grad_norm = grad_norm.sqrt() 
 
         # Tính toán scale và thực hiện update weights
         scale = group["rho"] / (grad_norm + 1e-12)  # Tránh chia 0
@@ -112,11 +110,11 @@ class FSAM(torch.optim.Optimizer):
 
                 # Lưu trữ trạng thái cũ
                 state = self.state[p]
-                state["old_p"] = p.data.clone()  # Lưu lại trạng thái cũ trước khi thay đổi
+                state["old_p"] = p.data.clone() 
 
                 # Tính e(w) và thực hiện update weights
                 e_w = (torch.pow(p, 2) if  group["adaptive"] else 1.0) * p.grad * scale
-                p.add_(e_w)  # In-place addition để tối ưu bộ nhớ
+                p.add_(e_w) 
 
         # Clear gradient nếu cần
         if zero_grad:
@@ -134,7 +132,6 @@ class FSAM(torch.optim.Optimizer):
                 # Lấy lại w từ old_p
                 p.data.copy_(self.state[p]["old_p"])  # In-place copy để khôi phục trạng thái cũ
 
-        # Gọi optimizer step để cập nhật weights
         self.base_optimizer.step()
 
         # Clear gradient nếu cần
@@ -143,7 +140,6 @@ class FSAM(torch.optim.Optimizer):
 
     @torch.no_grad()
     def step(self, closure=None):
-        # Closure do a full forward-backward pass
         closure = torch.enable_grad()(closure)  
         self.first_step(zero_grad=True)        
         closure()

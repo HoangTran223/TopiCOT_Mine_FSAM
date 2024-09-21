@@ -201,13 +201,17 @@ class BasicTrainer:
                 batch_data = {key: value.to(device) for key, value in batch_data.items()}
                 rst_dict = self.model(batch_data, epoch_id=epoch, batch_idx=batch_idx)
                 batch_loss = rst_dict['loss']
+                optimizer.zero_grad()
 
-                batch_loss.mean().backward()
+                # batch_loss.mean().backward()
+                batch_loss.backward()
                 optimizer.first_step(zero_grad=True, device=device)
 
                 rst_dict_adv = self.model(batch_data, epoch_id=epoch, batch_idx=batch_idx)
-                batch_loss_adv = rst_dict_adv['loss']
-                batch_loss_adv.mean().backward()
+                # batch_loss_adv = rst_dict_adv['loss']
+                # batch_loss_adv.mean().backward()
+
+                rst_dict_adv['loss'].backward()
                 
                 optimizer.second_step(zero_grad=True)
 
