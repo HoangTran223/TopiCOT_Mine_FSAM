@@ -19,6 +19,7 @@ from topmost.trainers.SAM_function.FSAM import FSAM
 
 # Thêm
 # from torch.cuda.amp import autocast, GradScaler
+from topmost.trainers.SAM_function.bypass_bn import enable_running_stats, disable_running_stats
 
 
 class BasicTrainer:
@@ -199,6 +200,8 @@ class BasicTrainer:
             for batch_idx, batch_data in enumerate(dataset_handler.train_dataloader):
                 
                 batch_data = {key: value.to(device) for key, value in batch_data.items()}
+
+                enable_running_stats(model)
                 rst_dict = self.model(batch_data, epoch_id=epoch, batch_idx=batch_idx)
                 batch_loss = rst_dict['loss']
                 optimizer.zero_grad()
@@ -207,6 +210,7 @@ class BasicTrainer:
                 batch_loss.backward()
                 optimizer.first_step(zero_grad=True)
 
+                disable_running_stats(model)
                 rst_dict_adv = self.model(batch_data, epoch_id=epoch, batch_idx=batch_idx)
                 # batch_loss_adv = rst_dict_adv['loss']
                 # batch_loss_adv.mean().backward()
