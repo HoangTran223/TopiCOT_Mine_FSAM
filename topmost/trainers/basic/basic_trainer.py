@@ -63,8 +63,7 @@ class BasicTrainer:
             rho=self.rho,
             sigma=self.sigma,
             lmbda=self.lmbda,
-            foreach=True,
-            nesterov=True)
+            foreach=True)
 
         return optimizer
 
