@@ -2,7 +2,7 @@
 
 
 class FSAM(torch.optim.Optimizer):
-    def __init__(self, params, base_optimizer, device, rho=0.05, adaptive=False, lr=0.002, sigma=1, lmbda=0.9, foreach=False):
+    def __init__(self, params, base_optimizer, device, rho=0.05, adaptive=False, lr=0.002, sigma=1, lmbda=0.9, fused=True, nesterov=True):
         defaults = dict(rho=rho, adaptive=adaptive, lr=lr)
         super(FSAM, self).__init__(params, defaults)
 
@@ -12,9 +12,10 @@ class FSAM(torch.optim.Optimizer):
         self.sigma = sigma
         self.lmbda = lmbda
 
-        self.base_optimizer = base_optimizer(self.param_groups, foreach=foreach)
+        self.base_optimizer = base_optimizer(self.param_groups, fused=fused, nesterov=nesterov)
         self.param_groups = self.base_optimizer.param_groups
         self.defaults.update(self.base_optimizer.defaults)
+        print ('FriendlySAM sigma:', self.sigma, 'lambda:', self.lmbda)
 
 
     # Đoạn code ban đầu 
@@ -95,11 +96,11 @@ class FSAM(torch.optim.Optimizer):
                     p.grad.add_(state["momentum"], alpha=-self.sigma)
                     state["momentum"].mul_(self.lmbda).add_(grad, alpha=1 - self.lmbda)  # In-place update momentum
 
-
                 grad_norm.add_(((torch.abs(p.to(device)) if group["adaptive"] else 1.0) * p.grad.to(device)).norm(2).pow(2))
-        grad_norm = grad_norm.sqrt() 
 
+        grad_norm = grad_norm.sqrt() 
         scale = group["rho"] / (grad_norm + 1e-12)  # Tránh chia 0
+
         for group in self.param_groups:
             for p in group["params"]:
                 if p.grad is None: 
@@ -111,8 +112,7 @@ class FSAM(torch.optim.Optimizer):
                 e_w = (torch.pow(p, 2) if  group["adaptive"] else 1.0) * p.grad * scale
                 p.add_(e_w) 
 
-        if zero_grad:
-            self.zero_grad()
+        if zero_grad: self.zero_grad()
     
 
     @torch.no_grad()
