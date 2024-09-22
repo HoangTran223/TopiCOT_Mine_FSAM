@@ -62,7 +62,8 @@ class BasicTrainer:
             lr=self.learning_rate,
             rho=self.rho,
             sigma=self.sigma,
-            lmbda=self.lmbda)
+            lmbda=self.lmbda,
+            foreach=True)
 
         return optimizer
 
