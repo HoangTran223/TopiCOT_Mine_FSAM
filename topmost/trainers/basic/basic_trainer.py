@@ -19,7 +19,7 @@ from topmost.trainers.SAM_function.FSAM import FSAM
 
 # Thêm
 # from torch.cuda.amp import autocast, GradScaler
-from topmost.trainers.SAM_function.bypass_bn import enable_running_stats, disable_running_stats
+# from topmost.trainers.SAM_function.bypass_bn import enable_running_stats, disable_running_stats
 
 
 class BasicTrainer:
@@ -212,11 +212,8 @@ class BasicTrainer:
 
                 # disable_running_stats(self.model)
                 rst_dict_adv = self.model(batch_data, epoch_id=epoch, batch_idx=batch_idx)
-                # batch_loss_adv = rst_dict_adv['loss']
-                # batch_loss_adv.mean().backward()
-
-                rst_dict_adv['loss'].backward()
-
+                batch_loss_adv = rst_dict_adv['loss']
+                batch_loss_adv.mean().backward()
                 optimizer.second_step(zero_grad=True)
 
                 for key in rst_dict:

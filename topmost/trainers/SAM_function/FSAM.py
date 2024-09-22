@@ -78,9 +78,17 @@ class FSAM(torch.optim.Optimizer):
 
 
     # Kịch bản 2
+
+    def _grad_norm(self):
+        norm = torch.norm(
+                    torch.stack([
+                        ((torch.abs(p) if group["adaptive"] else 1.0) * p.grad).norm(p=2).to(self.device)
+                        for group in self.param_groups for p in group["params"] if p.grad is not None ]),
+                    p=2)
+        return norm
+
     @torch.no_grad()
     def first_step(self, zero_grad=False, device='cuda'):
-        grad_norm = torch.tensor(0.0, device=device)
 
         for group in self.param_groups:
             for p in group["params"]:
@@ -96,12 +104,10 @@ class FSAM(torch.optim.Optimizer):
                     p.grad.add_(state["momentum"], alpha=-self.sigma)
                     state["momentum"].mul_(self.lmbda).add_(grad, alpha=1 - self.lmbda)  # In-place update momentum
 
-                grad_norm.add_(((torch.abs(p.to(device)) if group["adaptive"] else 1.0) * p.grad.to(device)).norm(2).pow(2))
-
-        grad_norm = grad_norm.sqrt() 
-        scale = group["rho"] / (grad_norm + 1e-12)  # Tránh chia 0
+        grad_norm = self._grad_norm()
 
         for group in self.param_groups:
+            scale = group["rho"] / (grad_norm + 1e-12)  # Tránh chia 0
             for p in group["params"]:
                 if p.grad is None: 
                     continue
