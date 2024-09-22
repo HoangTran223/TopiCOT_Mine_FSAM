@@ -64,7 +64,9 @@ class BasicTrainer:
             sigma=self.sigma,
             lmbda=self.lmbda,
             fused=True,
-            nesterov=True)
+            nesterov=True,
+            momentum=0.9,
+            dampening=0)
 
         return optimizer
 
