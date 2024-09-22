@@ -63,7 +63,7 @@ class BasicTrainer:
             rho=self.rho,
             sigma=self.sigma,
             lmbda=self.lmbda,
-            fused=True,
+            foreach=True,
             nesterov=True,
             momentum=0.9,
             dampening=0)

@@ -2,7 +2,7 @@
 
 
 class FSAM(torch.optim.Optimizer):
-    def __init__(self, params, base_optimizer, device, rho=0.05, adaptive=False, lr=0.002, sigma=1, lmbda=0.9, fused=True, nesterov=True, momentum=0.9, dampening=0):
+    def __init__(self, params, base_optimizer, device, rho=0.05, adaptive=False, lr=0.002, sigma=1, lmbda=0.9, foreach=True, nesterov=True, momentum=0.9, dampening=0):
         defaults = dict(rho=rho, adaptive=adaptive, lr=lr)
         super(FSAM, self).__init__(params, defaults)
 
@@ -12,7 +12,7 @@ class FSAM(torch.optim.Optimizer):
         self.sigma = sigma
         self.lmbda = lmbda
 
-        self.base_optimizer = base_optimizer(self.param_groups, momentum=0.9, dampening=0, fused=fused, nesterov=nesterov)
+        self.base_optimizer = base_optimizer(self.param_groups, momentum=0.9, dampening=0, foreach=foreach, nesterov=nesterov)
         self.param_groups = self.base_optimizer.param_groups
         self.defaults.update(self.base_optimizer.defaults)
         print ('FriendlySAM sigma:', self.sigma, 'lambda:', self.lmbda)
