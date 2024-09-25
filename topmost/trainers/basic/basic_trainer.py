@@ -17,7 +17,7 @@ from topmost.trainers.SAM_function.SAM import SAM
 from topmost.trainers.SAM_function.LookaheadSAM import AOSAM
 
 # Thêm
-from pytorch_lightning import LightningModule
+# from pytorch_lightning import LightningModule
 
 # Thêm
 # from torch.cuda.amp import autocast, GradScaler
@@ -45,6 +45,15 @@ class BasicTrainer():
         self.sigma_t = 1e-10
         self.delta = delta
         self.T = T
+
+    
+    def _grad_norm(self):
+        norm = torch.norm(
+                    torch.stack([
+                        ((torch.abs(p) if group["adaptive"] else 1.0) * p.grad).norm(p=2).to(self.device)
+                        for group in self.param_groups for p in group["params"] if p.grad is not None ]),
+                    p=2)
+        return norm
 
     def make_sam_optimizer(self,):
         base_optimizer = torch.optim.SGD
