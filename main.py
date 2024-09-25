@@ -46,11 +46,18 @@ if __name__ == "__main__":
         dataset = topmost.data.BasicDatasetHandler(
             os.path.join(DATA_DIR, args.dataset), device=args.device, read_labels=read_labels,
             as_tensor=True, contextual_embed=True, batch_size=args.batch_size)
+        dataset.to(args.device)
     else:
         dataset = topmost.data.BasicDatasetHandler(
             os.path.join(DATA_DIR, args.dataset), device=args.device, read_labels=read_labels,
             as_tensor=True, batch_size=args.batch_size)
+<<<<<<< HEAD
  
+=======
+
+    
+
+>>>>>>> d108fec8dcd4576a1f9c168e25d53cdf9545696d
     # create a model
     pretrainWE = scipy.sparse.load_npz(os.path.join(
         DATA_DIR, args.dataset, "word_embeddings.npz")).toarray()
@@ -224,6 +231,7 @@ if __name__ == "__main__":
                                                 lr_step_size=args.lr_step_size,
                                                 rho=args.rho,
                                                 sigma=args.sigma,
+<<<<<<< HEAD
                                                 lmbda=args.lmbda,
                                                 acc_step=args.acc_step,
                                                 delta=args.delta,
@@ -238,10 +246,16 @@ if __name__ == "__main__":
     #                                             lr_scheduler=args.lr_scheduler,
     #                                             lr_step_size=args.lr_step_size,
     #                                             rho=args.rho)
+=======
+                                                lmbda=args.lmbda
+                                                )
+                                                
+>>>>>>> d108fec8dcd4576a1f9c168e25d53cdf9545696d
     # train the model
     # trainer.train(dataset, MOO=args.MOO_algo)
 
-    trainer.train(dataset)
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    trainer.train(dataset, device)
     
     torch.save(trainer.model.state_dict(), os.path.join(current_run_dir, 'checkpoint.pt'))
 

@@ -48,6 +48,7 @@ def add_training_argument(parser):
                         help='batch size')
     parser.add_argument('--lr', type=float, default=0.001,
                         help='learning rate')
+<<<<<<< HEAD
 
     # SAM
     parser.add_argument('--rho', type=float, default=0.05,
@@ -68,6 +69,14 @@ def add_training_argument(parser):
                         help="delta_AOSAM")
 
 
+=======
+    parser.add_argument('--rho', type=float, default=0.005,
+                        help='rho')   
+    parser.add_argument('--sigma', type=float, default=1.0,
+                        help='sigma') 
+    parser.add_argument('--lmbda', type=float, default=0.6,
+                        help='lmbda')               
+>>>>>>> d108fec8dcd4576a1f9c168e25d53cdf9545696d
     parser.add_argument('--device', type=str, default='cuda',
                         help='device to run the model, cuda or cpu')
     parser.add_argument('--seed', type=int, default=0, help='random seed')

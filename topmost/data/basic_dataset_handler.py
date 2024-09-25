@@ -43,9 +43,14 @@ class DatasetHandler(Dataset):
             'contextual_embed': self.contextual_embed[idx]
         }
 
+    def to(self, device):
+        self.data = self.data.to(device)  
+        if self.contextual_embed is not None:
+            self.contextual_embed = self.contextual_embed.to(device)  
+
 
 class RawDatasetHandler:
-    def __init__(self, docs, preprocessing, batch_size=200, device='cpu', as_tensor=False, contextual_embed=False):
+    def __init__(self, docs, preprocessing, batch_size=200, device='cuda', as_tensor=False, contextual_embed=False):
 
         rst = preprocessing.preprocess(docs)
         self.train_data = rst['train_bow']
@@ -71,7 +76,7 @@ class RawDatasetHandler:
 
 
 class BasicDatasetHandler:
-    def __init__(self, dataset_dir, batch_size=200, read_labels=False, device='cpu', as_tensor=False, contextual_embed=False):
+    def __init__(self, dataset_dir, batch_size=200, read_labels=False, device='cuda', as_tensor=False, contextual_embed=False):
         # train_bow: NxV
         # test_bow: Nxv
         # word_emeddings: VxD
@@ -161,3 +166,26 @@ class BasicDatasetHandler:
             self.test_labels = np.loadtxt(f'{path}/test_labels.txt', dtype=int)
 
         self.vocab = file_utils.read_text(f'{path}/vocab.txt')
+
+
+    def to(self, device):
+        # Chuyển dữ liệu sang thiết bị mong muốn
+        self.train_data = self.train_data.to(device)
+        self.test_data = self.test_data.to(device)
+
+        if hasattr(self, 'train_contextual_embed') and self.train_contextual_embed is not None:
+            self.train_contextual_embed = self.train_contextual_embed.to(device)
+        if hasattr(self, 'test_contextual_embed') and self.test_contextual_embed is not None:
+            self.test_contextual_embed = self.test_contextual_embed.to(device)
+
+
+        # Cập nhật lại dữ liệu trong DataLoader
+        if hasattr(self, 'train_dataloader'):
+            self.train_dataloader.dataset.data = self.train_data
+            if self.train_contextual_embed is not None:
+                self.train_dataloader.dataset.contextual_embed = self.train_contextual_embed
+
+        if hasattr(self, 'test_dataloader'):
+            self.test_dataloader.dataset.data = self.test_data
+            if self.test_contextual_embed is not None:
+                self.test_dataloader.dataset.contextual_embed = self.test_contextual_embed
