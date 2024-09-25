@@ -1,4 +1,5 @@
-﻿class FSAM(torch.optim.Optimizer):
+﻿import torch
+class FSAM(torch.optim.Optimizer):
     def __init__(self, params, base_optimizer, device, rho=0.05, adaptive=False, lr=0.002, sigma=1, lmbda=0.9): #foreach=True
         defaults = dict(rho=rho, adaptive=adaptive, lr=lr)
         super(FSAM, self).__init__(params, defaults)
