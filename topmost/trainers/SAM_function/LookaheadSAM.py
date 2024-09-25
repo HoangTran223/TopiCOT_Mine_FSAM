@@ -14,7 +14,7 @@ class AOSAM(torch.optim.Optimizer):
         self.base_optimizer = base_optimizer(self.param_groups)
         self.param_groups = self.base_optimizer.param_groups
         self.defaults.update(self.base_optimizer.defaults)
-
+        self.device = device
         self.mu_t = 0.0
         self.sigma_t = 1e-10
         self.delta = delta
