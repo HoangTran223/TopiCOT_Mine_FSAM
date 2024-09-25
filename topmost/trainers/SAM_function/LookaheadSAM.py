@@ -6,8 +6,7 @@
     k1, k2: hyper-params
 """
 class AOSAM(torch.optim.Optimizer):
-    
-    def __init__(self, params, base_optimizer, rho=0.05, lr=0.002, delta = 0.3, k1=0.2, k2=0.4, T=11314):
+    def __init__(self, params, base_optimizer, device, rho=0.05, lr=0.002, delta = 0.3, k1=0.2, k2=0.4, T=11314):
         defaults = dict(rho=rho, lr=lr, delta=delta, k1=k1, k2=k2, T=T)
         super(AOSAM, self).__init__(params, defaults)
 
