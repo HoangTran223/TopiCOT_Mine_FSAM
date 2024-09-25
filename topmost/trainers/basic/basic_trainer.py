@@ -59,8 +59,7 @@ class BasicTrainer():
             lmbda=self.lmbda) 
 
         return optimizer
-
-
+        
 
     def make_aosam_optimizer(self,):
         base_optimizer = torch.optim.SGD
@@ -71,7 +70,6 @@ class BasicTrainer():
             device=self.device,
             lr=self.learning_rate,
             rho=self.rho,
-            sigma=self.sigma,
             lmbda=self.lmbda,
             delta=self.delta) 
 
