@@ -7,7 +7,7 @@
 """
 class AOSAM(torch.optim.Optimizer):
     
-    def __init__(self, params, base_optimizer, rho=0.05, lr=0.002, delta = 0.2, k1=0.2, k2=0.4, T=int):
+    def __init__(self, params, base_optimizer, rho=0.05, lr=0.002, delta = 0.3, k1=0.2, k2=0.4, T=11314):
         defaults = dict(rho=rho, lr=lr, delta=delta, k1=k1, k2=k2, T=T)
         super(AOSAM, self).__init__(params, defaults)
 
@@ -34,28 +34,46 @@ class AOSAM(torch.optim.Optimizer):
         
         return k1 * (t / T) + k2* (1 - t / T)
 
+    # @torch.no_grad()
+    # def first_step(self, zero_grad=False):
+    #     grad_norm = self._grad_norm()
+
+    #     # Tính mu_t, sigma_t, c_t
+    #     self.mu_t = self.delta * self.mu_t + (1 - self.delta) * grad_norm.item()**2
+    #     self.sigma_t = self.delta * self.sigma_t + (1 - self.delta) * ((grad_norm.item()**2) - self.mu_t)**2
+    #     c_t = self.compute_ct
+
+    #     if grad_norm.item()**2 >= (self.mu_t + c_t * self.sigma_t**0.5):
+    #         for group in self.param_groups:
+    #             scale = group["rho"] / (grad_norm + 1e-12)
+
+    #             for p in group["params"]:
+    #                 if p.grad is None: continue
+    #                 self.state[p]["old_p"] = p.data.clone()
+    #                 e_w = (torch.pow(p, 2) if group["adaptive"] else 1.0) * p.grad * scale.to(p)
+                    
+    #                 # Compute: w + e(w)
+    #                 p.add_(e_w)                      
+
+    #     if zero_grad: self.zero_grad()
+    
+
     @torch.no_grad()
     def first_step(self, zero_grad=False):
         grad_norm = self._grad_norm()
+        for group in self.param_groups:
+            scale = group["rho"] / (grad_norm + 1e-12)
 
-        # Tính mu_t, sigma_t, c_t
-        self.mu_t = self.delta * self.mu_t + (1 - self.delta) * grad_norm.item()**2
-        self.sigma_t = self.delta * self.sigma_t + (1 - self.delta) * ((grad_norm.item()**2) - self.mu_t)**2
-        c_t = self.compute_ct
-
-        if grad_norm.item()**2 >= (self.mu_t + c_t * self.sigma_t**0.5):
-            for group in self.param_groups:
-                scale = group["rho"] / (grad_norm + 1e-12)
-
-                for p in group["params"]:
-                    if p.grad is None: continue
-                    self.state[p]["old_p"] = p.data.clone()
-                    e_w = (torch.pow(p, 2) if group["adaptive"] else 1.0) * p.grad * scale.to(p)
-                    
-                    # Compute: w + e(w)
-                    p.add_(e_w)                      
+            for p in group["params"]:
+                if p.grad is None: continue
+                self.state[p]["old_p"] = p.data.clone()
+                e_w = (torch.pow(p, 2) if group["adaptive"] else 1.0) * p.grad * scale.to(p)
+                
+                # Compute: w + e(w)
+                p.add_(e_w)                      
 
         if zero_grad: self.zero_grad()
+
 
     @torch.no_grad()
     def second_step(self, zero_grad=False):

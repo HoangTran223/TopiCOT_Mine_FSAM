@@ -61,6 +61,12 @@ def add_training_argument(parser):
     parser.add_argument('--acc_step', type=float, default=8,
                         help='acc_step') 
 
+    # TRAM
+    parser.add_argument('--T', type=int, default=11314,
+                        help='Number_of_iterations') 
+    parser.add_argument('--delta', type=float, default=0.3,
+                        help="delta_AOSAM")
+
 
     parser.add_argument('--device', type=str, default='cuda',
                         help='device to run the model, cuda or cpu')

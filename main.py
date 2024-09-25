@@ -225,9 +225,10 @@ if __name__ == "__main__":
                                                 rho=args.rho,
                                                 sigma=args.sigma,
                                                 lmbda=args.lmbda,
-                                                acc_step=args.acc_step)
-                                                # rho=args.rho
-                                                
+                                                acc_step=args.acc_step,
+                                                delta=args.delta,
+                                                T=args.T)
+                                                # rho=args.rho           
 
     # Với SAM                                        
     # else:

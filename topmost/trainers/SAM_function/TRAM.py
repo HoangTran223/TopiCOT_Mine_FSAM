@@ -15,7 +15,7 @@ class KLDivergence:
         elif self.kl_type == "symmetric":
             self.klfn = lambda x, y: self._kl(x, y) + self._kl(y, x)
              
-    def _kl(self, x: torch.Tensor, y: torch.Tenso):
+    def _kl(self, x: torch.Tensor, y: torch.Tensor):
         return F.kl_div(
             input=F.log_softmax(y, dim=-1, dtype=torch.float32),
             target=F.log_softmax(x, dim=-1, dtype=torch.float32),
