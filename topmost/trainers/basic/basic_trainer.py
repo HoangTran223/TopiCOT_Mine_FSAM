@@ -14,26 +14,17 @@ import torch.optim
 # Thêm
 from topmost.trainers.SAM_function.SAM import SAM
 from topmost.trainers.SAM_function.FSAM import FSAM
-<<<<<<< HEAD
 from topmost.trainers.SAM_function.LookaheadSAM import AOSAM
 
 # Thêm
 from pytorch_lightning import LightningModule
-=======
->>>>>>> d108fec8dcd4576a1f9c168e25d53cdf9545696d
 
 # Thêm
 # from torch.cuda.amp import autocast, GradScaler
 # from topmost.trainers.SAM_function.bypass_bn import enable_running_stats, disable_running_stats
 
-<<<<<<< HEAD
 class BasicTrainer():
     def __init__(self, model, epochs=200, learning_rate=0.002, batch_size=200, lr_scheduler=None, lr_step_size=125, log_interval=5, rho=0.05, sigma=1, lmbda=0.9, device = 'cuda', acc_step=8, delta=0.3, T = 11314):
-=======
-
-class BasicTrainer:
-    def __init__(self, model, epochs=200, learning_rate=0.002, batch_size=200, lr_scheduler=None, lr_step_size=125, log_interval=5, rho=0.05, sigma=1, lmbda=0.6, device = 'cuda'):
->>>>>>> d108fec8dcd4576a1f9c168e25d53cdf9545696d
         self.model = model
         self.epochs = epochs
         self.learning_rate = learning_rate
@@ -45,7 +36,6 @@ class BasicTrainer:
         self.sigma = sigma
         self.lmbda = lmbda
         self.device = device
-<<<<<<< HEAD
         # Them
         self.acc_step = acc_step
         self.logger = logging.getLogger('main')
@@ -59,28 +49,6 @@ class BasicTrainer:
     def make_sam_optimizer(self,):
         base_optimizer = torch.optim.SGD
         # FSAM
-=======
-        self.logger = logging.getLogger('main')
-
-    def make_optimizer(self,):
-        # args_dict = {
-        #     'params': self.model.parameters(),
-        #     'lr': self.learning_rate,
-        #     'rho': self.rho,
-        # }
-        # optimizer = torch.optim.Adam(**args_dict)
-
-        # Chọn với SAM
-        # base_optimizer = torch.optim.SGD
-        # optimizer = SAM(
-        #     self.model.parameters(),
-        #     base_optimizer,
-        #     lr=self.learning_rate,
-        #     rho=self.rho)
-
-        # Chọn với FSAM
-        base_optimizer = torch.optim.SGD
->>>>>>> d108fec8dcd4576a1f9c168e25d53cdf9545696d
         optimizer = FSAM(
             self.model.parameters(),
             base_optimizer,
@@ -88,11 +56,7 @@ class BasicTrainer:
             lr=self.learning_rate,
             rho=self.rho,
             sigma=self.sigma,
-<<<<<<< HEAD
             lmbda=self.lmbda) 
-=======
-            lmbda=self.lmbda)           # foreach=True
->>>>>>> d108fec8dcd4576a1f9c168e25d53cdf9545696d
 
         return optimizer
 
@@ -138,7 +102,6 @@ class BasicTrainer:
 
         return top_words, train_theta
 
-<<<<<<< HEAD
     
     def train(self, dataset_handler, verbose=False):
         accumulation_steps = self.acc_step
@@ -149,29 +112,16 @@ class BasicTrainer:
             print("===>using lr_scheduler")
             self.logger.info("===>using lr_scheduler")
             lr_scheduler = self.make_lr_scheduler(adam_optimizer)
-=======
-    # Sửa lại hàm train để sử dụng SAM
-    # def train(self, dataset_handler, verbose=False):
-    #     optimizer = self.make_optimizer()
-    #     # base_optimizer = torch.optim.SGD
-    #     # optimizer = SAM(self.model.parameters(), base_optimizer, rho=0.05, adaptive=False)
 
-    #     if self.lr_scheduler:
-    #         print("===>using lr_scheduler")
-    #         self.logger.info("===>using lr_scheduler")
-    #         lr_scheduler = self.make_lr_scheduler(optimizer)
->>>>>>> d108fec8dcd4576a1f9c168e25d53cdf9545696d
+        data_size = len(dataset_handler.train_dataloader.dataset)
 
-    #     data_size = len(dataset_handler.train_dataloader.dataset)
+        for epoch in tqdm(range(1, self.epochs + 1)):
+            self.model.train()
+            loss_rst_dict = defaultdict(float)
+            wandb.log({'epoch': epoch})
 
-    #     for epoch in tqdm(range(1, self.epochs + 1)):
-    #         self.model.train()
-    #         loss_rst_dict = defaultdict(float)
-    #         wandb.log({'epoch': epoch})
+            for batch_idx, batch_data in enumerate(dataset_handler.train_dataloader):
 
-    #         for batch_idx, batch_data in enumerate(dataset_handler.train_dataloader):
-
-<<<<<<< HEAD
                 rst_dict = self.model(batch_data, epoch_id=epoch, batch_idx=batch_idx)
                 batch_loss = rst_dict['loss']
                 batch_loss.backward()
@@ -184,19 +134,6 @@ class BasicTrainer:
                 c_t = self.compute_ct
 
                 if grad_norm.item()**2 >= (self.mu_t + c_t * self.sigma_t**0.5):
-=======
-    #             rst_dict = self.model(batch_data, epoch_id=epoch, batch_idx=batch_idx)
-    #             batch_loss = rst_dict['loss']
-    #             batch_loss.mean().backward()
-                
-    #             optimizer.first_step(zero_grad=True)
-
-    #             rst_dict_adv = self.model(batch_data, epoch_id=epoch, batch_idx=batch_idx)
-    #             batch_loss_adv = rst_dict_adv['loss']
-    #             batch_loss_adv.mean().backward()
-            
-    #             optimizer.second_step(zero_grad=True)
->>>>>>> d108fec8dcd4576a1f9c168e25d53cdf9545696d
 
                     aosam_optimizer.first_step(zero_grad=True)
 
@@ -212,41 +149,41 @@ class BasicTrainer:
 
 
 
-    def train(self, dataset_handler, device, verbose=False):
-        optimizer = self.make_optimizer()
-        # base_optimizer = torch.optim.SGD
-        # optimizer = SAM(self.model.parameters(), base_optimizer, rho=0.05, adaptive=False)
+    # def train(self, dataset_handler, device, verbose=False):
+    #     optimizer = self.make_optimizer()
+    #     # base_optimizer = torch.optim.SGD
+    #     # optimizer = SAM(self.model.parameters(), base_optimizer, rho=0.05, adaptive=False)
 
-        if self.lr_scheduler:
-            print("===>using lr_scheduler")
-            self.logger.info("===>using lr_scheduler")
-            lr_scheduler = self.make_lr_scheduler(optimizer)
+    #     if self.lr_scheduler:
+    #         print("===>using lr_scheduler")
+    #         self.logger.info("===>using lr_scheduler")
+    #         lr_scheduler = self.make_lr_scheduler(optimizer)
 
-        data_size = len(dataset_handler.train_dataloader.dataset)
+    #     data_size = len(dataset_handler.train_dataloader.dataset)
 
-        for epoch in tqdm(range(1, self.epochs + 1)):
-            self.model.train()
-            loss_rst_dict = defaultdict(float)
-            wandb.log({'epoch': epoch})
+    #     for epoch in tqdm(range(1, self.epochs + 1)):
+    #         self.model.train()
+    #         loss_rst_dict = defaultdict(float)
+    #         wandb.log({'epoch': epoch})
 
-            for batch_idx, batch_data in enumerate(dataset_handler.train_dataloader):
+    #         for batch_idx, batch_data in enumerate(dataset_handler.train_dataloader):
                 
-                batch_data = {key: value.to(device) for key, value in batch_data.items()}
+    #             batch_data = {key: value.to(device) for key, value in batch_data.items()}
 
-                # enable_running_stats(self.model)
-                rst_dict = self.model(batch_data, epoch_id=epoch, batch_idx=batch_idx)
-                batch_loss = rst_dict['loss']
-                optimizer.zero_grad()
+    #             # enable_running_stats(self.model)
+    #             rst_dict = self.model(batch_data, epoch_id=epoch, batch_idx=batch_idx)
+    #             batch_loss = rst_dict['loss']
+    #             optimizer.zero_grad()
 
-                # batch_loss.mean().backward()
-                batch_loss.backward()
-                optimizer.first_step(zero_grad=True)
+    #             # batch_loss.mean().backward()
+    #             batch_loss.backward()
+    #             optimizer.first_step(zero_grad=True)
 
-                # disable_running_stats(self.model)
-                rst_dict_adv = self.model(batch_data, epoch_id=epoch, batch_idx=batch_idx)
-                batch_loss_adv = rst_dict_adv['loss']
-                batch_loss_adv.mean().backward()
-                optimizer.second_step(zero_grad=True)
+    #             # disable_running_stats(self.model)
+    #             rst_dict_adv = self.model(batch_data, epoch_id=epoch, batch_idx=batch_idx)
+    #             batch_loss_adv = rst_dict_adv['loss']
+    #             batch_loss_adv.mean().backward()
+    #             optimizer.second_step(zero_grad=True)
 
                 for key in rst_dict:
                     try:
