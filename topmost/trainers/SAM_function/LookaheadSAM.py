@@ -8,7 +8,7 @@
 
 
 class AOSAM(torch.optim.Optimizer):
-    def __init__(self, params, base_optimizer, device, rho=0.05, adaptive=Fale, lr=0.002, delta = 0.3, k1=0.2, k2=0.4):
+    def __init__(self, params, base_optimizer, device, rho=0.05, adaptive=False, lr=0.002, delta = 0.3, k1=0.2, k2=0.4):
         defaults = dict(rho=rho, adaptive = adaptive, lr=lr, delta=delta, k1=k1, k2=k2)
         super(AOSAM, self).__init__(params, defaults)
 
