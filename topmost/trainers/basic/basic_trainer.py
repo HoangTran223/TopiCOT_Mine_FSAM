@@ -24,7 +24,7 @@ from topmost.trainers.SAM_function.LookaheadSAM import AOSAM
 # from topmost.trainers.SAM_function.bypass_bn import enable_running_stats, disable_running_stats
 
 class BasicTrainer():
-    def __init__(self, model, epochs=200, learning_rate=0.002, batch_size=200, lr_scheduler=None, lr_step_size=125, log_interval=5, rho=0.05, device = 'cuda', delta=0.3, T = 11314, mu_t = 0, sigma_t = 1e-10):
+    def __init__(self, model, epochs=200, learning_rate=0.002, batch_size=200, lr_scheduler=None, lr_step_size=125, log_interval=5, rho=0.05, device = 'cuda', delta=0.3, mut = 0, sigmat = 1e-10, k1= 0.2, k2=0.4):
         self.model = model
         self.epochs = epochs
         self.learning_rate = learning_rate
@@ -38,10 +38,11 @@ class BasicTrainer():
         self.logger = logging.getLogger('main')
 
         # Them
-        self.mu_t = 0.0
-        self.sigma_t = 1e-10
+        self.mut = 0.0
+        self.sigmat = 1e-10
         self.delta = delta
-        self.T = T
+        self.k1 = k1 
+        self.k2 = k2
         self.optimizer = make_aosam_optimizer(self,)
 
 
@@ -137,16 +138,14 @@ class BasicTrainer():
                 
                 grad_norm = self._grad_norm()
 
-                # Tính mu_t, sigma_t
-                self.mu_t = self.delta * self.mu_t + (1 - self.delta) * grad_norm.item()**2
-                self.sigma_t = self.delta * self.sigma_t + (1 - self.delta) * ((grad_norm.item()**2) - self.mu_t)**2
+                # Tính mut, sigmat
+                self.mut = self.delta * self.mut + (1 - self.delta) * grad_norm.item()**2
+                self.sigmat = self.delta * self.sigmat + (1 - self.delta) * ((grad_norm.item()**2) - self.mut)**2
                 
                 # Tính c_t
-                k1 = 0.2
-                k2 = 0.4
-                c_t = (t / T) * k1 + (1 - (t / T)) * k2
+                c_t = (t / T) * self.k1 + (1 - (t / T)) * self.k2
 
-                if grad_norm.item()**2 >= (self.mu_t + c_t * (self.sigma_t**0.5)):
+                if grad_norm.item()**2 >= (self.mut + c_t * (self.sigmat**0.5)):
 
                     aosam_optimizer.first_step(zero_grad=True)
 
