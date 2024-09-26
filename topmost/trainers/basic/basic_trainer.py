@@ -113,7 +113,7 @@ class BasicTrainer():
 
     
     def train(self, dataset_handler, verbose=False):
-        accumulation_steps = self.acc_step
+
         adam_optimizer = self.make_adam_optimizer()
         aosam_optimizer = self.make_aosam_optimizer()  
 
@@ -137,7 +137,6 @@ class BasicTrainer():
                 rst_dict = self.model(batch_data, epoch_id=epoch, batch_idx=batch_idx)
                 batch_loss = rst_dict['loss']
                 batch_loss.backward()
-                # batch_loss = rst_dict['loss'] / accumulation_steps
                 
                 grad_norm = self._grad_norm()
 
