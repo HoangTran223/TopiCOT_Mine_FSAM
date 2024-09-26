@@ -5,9 +5,11 @@
     c_t liên quan đến k1, k2. Chọn k1, k2 sao cho %SAM = 61%. Xấp xỉ, ta chọn k1=0.2, k2=0.4
     k1, k2: hyper-params
 """
+
+
 class AOSAM(torch.optim.Optimizer):
-    def __init__(self, params, base_optimizer, device, rho=0.05, lr=0.002, delta = 0.3, k1=0.2, k2=0.4):
-        defaults = dict(rho=rho, lr=lr, delta=delta, k1=k1, k2=k2)
+    def __init__(self, params, base_optimizer, device, rho=0.05, adaptive=Fale, lr=0.002, delta = 0.3, k1=0.2, k2=0.4):
+        defaults = dict(rho=rho, adaptive = adaptive, lr=lr, delta=delta, k1=k1, k2=k2)
         super(AOSAM, self).__init__(params, defaults)
 
         self.base_optimizer = base_optimizer(self.param_groups)
