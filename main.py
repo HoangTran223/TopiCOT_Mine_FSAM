@@ -224,12 +224,10 @@ if __name__ == "__main__":
                                                 lr_scheduler=args.lr_scheduler,
                                                 lr_step_size=args.lr_step_size,
                                                 rho=args.rho,
-                                                sigma=args.sigma,
-                                                lmbda=args.lmbda,
-                                                acc_step=args.acc_step,
+                                                device=args.device,
                                                 delta=args.delta,
-                                                T=args.T)
-                                                # rho=args.rho           
+                                                T=args.T)          
+
 
     # Với SAM                                        
     # else:

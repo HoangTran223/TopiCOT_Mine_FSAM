@@ -24,7 +24,7 @@ from topmost.trainers.SAM_function.LookaheadSAM import AOSAM
 # from topmost.trainers.SAM_function.bypass_bn import enable_running_stats, disable_running_stats
 
 class BasicTrainer():
-    def __init__(self, model, epochs=200, learning_rate=0.002, batch_size=200, lr_scheduler=None, lr_step_size=125, log_interval=5, rho=0.05, sigma=1, lmbda=0.9, device = 'cuda', acc_step=8, delta=0.3, T = 11314):
+    def __init__(self, model, epochs=200, learning_rate=0.002, batch_size=200, lr_scheduler=None, lr_step_size=125, log_interval=5, rho=0.05, device = 'cuda', delta=0.3, T = 11314):
         self.model = model
         self.epochs = epochs
         self.learning_rate = learning_rate
@@ -33,11 +33,8 @@ class BasicTrainer():
         self.lr_step_size = lr_step_size
         self.log_interval = log_interval
         self.rho = rho 
-        self.sigma = sigma
-        self.lmbda = lmbda
         self.device = device
         # Them
-        self.acc_step = acc_step
         self.logger = logging.getLogger('main')
 
         # Them
@@ -45,29 +42,32 @@ class BasicTrainer():
         self.sigma_t = 1e-10
         self.delta = delta
         self.T = T
+        self.optimizer = make_aosam_optimizer(self,)
 
-    
+
     def _grad_norm(self):
         norm = torch.norm(
-                    torch.stack([
-                        ((torch.abs(p) if group["adaptive"] else 1.0) * p.grad).norm(p=2).to(self.device)
-                        for group in self.param_groups for p in group["params"] if p.grad is not None ]),
-                    p=2)
+            torch.stack([
+                ((torch.abs(p) if group["adaptive"] else 1.0) * p.grad).norm(p=2)
+                for group in self.optimizer.param_groups
+                for p in group["params"] if p.grad is not None]),
+            p=2)
         return norm
 
-    def make_sam_optimizer(self,):
-        base_optimizer = torch.optim.SGD
-        # FSAM
-        optimizer = FSAM(
-            self.model.parameters(),
-            base_optimizer,
-            device=self.device,
-            lr=self.learning_rate,
-            rho=self.rho,
-            sigma=self.sigma,
-            lmbda=self.lmbda) 
+    
+    # def make_sam_optimizer(self,):
+    #     base_optimizer = torch.optim.SGD
+    #     # FSAM
+    #     optimizer = FSAM(
+    #         self.model.parameters(),
+    #         base_optimizer,
+    #         device=self.device,
+    #         lr=self.learning_rate,
+    #         rho=self.rho,
+    #         sigma=self.sigma,
+    #         lmbda=self.lmbda) 
 
-        return optimizer
+    #     return optimizer
 
 
     def make_aosam_optimizer(self,):
@@ -83,8 +83,6 @@ class BasicTrainer():
 
         return optimizer
 
-
-
     def make_adam_optimizer(self):
         args_dict = {
             'params': self.model.parameters(),
@@ -92,6 +90,7 @@ class BasicTrainer():
         }
         optimizer = torch.optim.Adam(**args_dict)
         return optimizer
+
 
     def make_lr_scheduler(self, optimizer):
         if self.lr_scheduler == "StepLR":
@@ -120,6 +119,7 @@ class BasicTrainer():
             lr_scheduler = self.make_lr_scheduler(adam_optimizer)
 
         data_size = len(dataset_handler.train_dataloader.dataset)
+        T = self.epochs * len(dataset_handler.train_dataloader)
 
         for epoch in tqdm(range(1, self.epochs + 1)):
             self.model.train()
@@ -128,18 +128,25 @@ class BasicTrainer():
 
             for batch_idx, batch_data in enumerate(dataset_handler.train_dataloader):
 
+                t = (epoch - 1) * total_batches + batch_idx + 1
+
                 rst_dict = self.model(batch_data, epoch_id=epoch, batch_idx=batch_idx)
                 batch_loss = rst_dict['loss']
                 batch_loss.backward()
                 # batch_loss = rst_dict['loss'] / accumulation_steps
                 
                 grad_norm = self._grad_norm()
-                # Tính mu_t, sigma_t, c_t
+
+                # Tính mu_t, sigma_t
                 self.mu_t = self.delta * self.mu_t + (1 - self.delta) * grad_norm.item()**2
                 self.sigma_t = self.delta * self.sigma_t + (1 - self.delta) * ((grad_norm.item()**2) - self.mu_t)**2
-                c_t = self.compute_ct
+                
+                # Tính c_t
+                k1 = 0.2
+                k2 = 0.4
+                c_t = (t / T) * k1 + (1 - (t / T)) * k2
 
-                if grad_norm.item()**2 >= (self.mu_t + c_t * self.sigma_t**0.5):
+                if grad_norm.item()**2 >= (self.mu_t + c_t * (self.sigma_t**0.5)):
 
                     aosam_optimizer.first_step(zero_grad=True)
 

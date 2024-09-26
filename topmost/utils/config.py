@@ -54,18 +54,23 @@ def add_training_argument(parser):
                         help='rho')  
 
     # FSAM
-    parser.add_argument('--sigma', type=float, default=1,
-                        help='sigma') 
-    parser.add_argument('--lmbda', type=float, default=0.9,
-                        help='lmbda') 
-    parser.add_argument('--acc_step', type=float, default=8,
-                        help='acc_step') 
+    # parser.add_argument('--sigma', type=float, default=1,
+    #                     help='sigma') 
+    # parser.add_argument('--lmbda', type=float, default=0.9,
+    #                     help='lmbda') 
+    # parser.add_argument('--acc_step', type=float, default=8,
+    #                     help='acc_step') 
 
-    # TRAM
+    # AOSAM
     parser.add_argument('--T', type=int, default=11314,
                         help='Number_of_iterations') 
     parser.add_argument('--delta', type=float, default=0.3,
                         help="delta_AOSAM")
+    parser.add_argument('--mu_t', type=float, default=0.0,
+                        help="mu_t_AOSAM")
+    parser.add_argument('--sigma_t', type=float, default=1e-10,
+                        help="sigma_t_AOSAM")
+
 
 
     parser.add_argument('--device', type=str, default='cuda',

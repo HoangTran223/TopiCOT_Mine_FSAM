@@ -13,6 +13,7 @@ class AOSAM(torch.optim.Optimizer):
         self.base_optimizer = base_optimizer(self.param_groups)
         self.param_groups = self.base_optimizer.param_groups
         self.defaults.update(self.base_optimizer.defaults)
+        
         self.device = device
         self.mu_t = 0.0
         self.sigma_t = 1e-10
@@ -26,12 +27,14 @@ class AOSAM(torch.optim.Optimizer):
                     p=2)
         return norm
 
-    def compute_ct(self, t):
-        T = self.defaults["T"]
-        k1 = self.defaults["k1"]
-        k2 = self.defaults["k2"]
+    # def compute_ct(self, t):
+    #     T = self.defaults["T"]
+    #     k1 = self.defaults["k1"]
+    #     k2 = self.defaults["k2"]
         
-        return k1 * (t / T) + k2* (1 - t / T)
+    #     return k1 * (t / T) + k2* (1 - t / T)
+
+
 
     # @torch.no_grad()
     # def first_step(self, zero_grad=False):
@@ -100,47 +103,4 @@ class AOSAM(torch.optim.Optimizer):
     def load_state_dict(self, state_dict):
         super().load_state_dict(state_dict)
         self.base_optimizer.param_groups = self.param_groups
-
-
-
-
-
-
-
-# from torch.optim._multi_tensor import SGD
-# class SAMSGD(SGD):
-#     def __init__(self, lr: float, rho: float):
-#         super().__init__(lr)
-#         self.param_groups[0]["rho"] = rho
-
-#     @torch.no_grad()
-#     def step(self, closure):
-        
-#         closure = torch.enable_grad()(closure)
-#         loss = closure().detach()
-
-#         for group in self.param_groups:
-#             grads = []
-#             params_with_grads = []
-
-#             rho = group['rho']
-
-#             # update lr
-#             for p in group['params']:
-#                 if p.grad is not None:
-#                     grads.append(p.grad.clone().detach())
-#                     params_with_grads.append(p)
-
-#             grad_norm = torch.stack([g.detach().norm(2) for g in grads]).norm(2)
-#             epsilon = grads  
-
-#             torch._foreach_mul_(epsilon, rho / grad_norm)
-#             torch._foreach_add_(params_with_grads, epsilon)
-#             closure()
-#             torch._foreach_sub_(params_with_grads, epsilon)
-
-#         super().step()
-#         return loss 
-
-
 
