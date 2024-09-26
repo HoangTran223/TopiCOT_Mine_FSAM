@@ -80,9 +80,12 @@ class BasicTrainer():
             device=self.device,
             lr=self.learning_rate,
             rho=self.rho,
-            delta=self.delta) 
+            delta=self.delta,
+            k1=self.k1,
+            k2=self.k2) 
 
         return optimizer
+
 
     def make_adam_optimizer(self):
         args_dict = {
