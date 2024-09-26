@@ -123,7 +123,8 @@ class BasicTrainer():
             lr_scheduler = self.make_lr_scheduler(adam_optimizer)
 
         data_size = len(dataset_handler.train_dataloader.dataset)
-        T = self.epochs * len(dataset_handler.train_dataloader)
+        total_batches = len(dataset_handler.train_dataloader)
+        T = self.epochs * total_batches
 
         for epoch in tqdm(range(1, self.epochs + 1)):
             self.model.train()
