@@ -43,7 +43,7 @@ class BasicTrainer():
         self.delta = delta
         self.k1 = k1 
         self.k2 = k2
-        self.optimizer = make_aosam_optimizer(self,)
+        self.optimizer = self.make_aosam_optimizer()
 
 
     def _grad_norm(self):
