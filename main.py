@@ -226,7 +226,10 @@ if __name__ == "__main__":
                                                 rho=args.rho,
                                                 device=args.device,
                                                 delta=args.delta,
-                                                T=args.T)          
+                                                T=args.T,
+                                                mu_t = args.mu_t,
+                                                sigma_t=args.sigma_t
+                                                )          
 
 
     # Với SAM                                        

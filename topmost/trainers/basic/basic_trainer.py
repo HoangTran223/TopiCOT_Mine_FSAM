@@ -24,7 +24,7 @@ from topmost.trainers.SAM_function.LookaheadSAM import AOSAM
 # from topmost.trainers.SAM_function.bypass_bn import enable_running_stats, disable_running_stats
 
 class BasicTrainer():
-    def __init__(self, model, epochs=200, learning_rate=0.002, batch_size=200, lr_scheduler=None, lr_step_size=125, log_interval=5, rho=0.05, device = 'cuda', delta=0.3, T = 11314):
+    def __init__(self, model, epochs=200, learning_rate=0.002, batch_size=200, lr_scheduler=None, lr_step_size=125, log_interval=5, rho=0.05, device = 'cuda', delta=0.3, T = 11314, mu_t = 0, sigma_t = 1e-10):
         self.model = model
         self.epochs = epochs
         self.learning_rate = learning_rate
