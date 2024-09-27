@@ -115,9 +115,9 @@ class BasicTrainer():
     
     def train(self, dataset_handler, verbose=False):
 
+        global demsam, demadam 
         demsam = 0
         demadam = 0
-        global demsam, demadam 
 
         adam_optimizer = self.make_adam_optimizer()
         aosam_optimizer = self.make_aosam_optimizer()  
