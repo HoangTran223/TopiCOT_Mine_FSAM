@@ -112,10 +112,11 @@ class BasicTrainer():
         return top_words, train_theta
 
     
-    demsam = 0
-    demadam = 0
+    
     def train(self, dataset_handler, verbose=False):
 
+        demsam = 0
+        demadam = 0
         global demsam, demadam 
 
         adam_optimizer = self.make_adam_optimizer()
@@ -187,7 +188,7 @@ class BasicTrainer():
                 output_log = f'Epoch: {epoch:03d}'
                 for key in loss_rst_dict:
                     output_log += f' {key}: {loss_rst_dict[key] / data_size :.3f}'
-                    
+
                 output_log += f' | Số lần dùng AOSAM: {demsam}, Số lần dùng Adam: {demadam}'
                 print(output_log)
                 self.logger.info(output_log)
